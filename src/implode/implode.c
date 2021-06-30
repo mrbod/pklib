@@ -587,6 +587,23 @@ __Exit:
 }
 
 //-----------------------------------------------------------------------------
+// Export imploding struct sizes
+struct ImplodeSizeConstants getImplodeSizeConstants(){
+    struct ImplodeSizeConstants res;
+    res.ownSize = sizeof(struct ImplodeSizeConstants);
+    res.common.ownSize = sizeof(struct CommonSizeConstants);
+    res.common.DIST_SIZES = DIST_SIZES;
+    res.common.OUT_BUFF_SIZE = OUT_BUFF_SIZE;
+    res.internalStructSize = CMP_BUFFER_SIZE;
+    res.OFFSS_SIZE2 = OFFSS_SIZE2;
+    res.LITERALS_COUNT = LITERALS_COUNT;
+    res.HASHTABLE_SIZE = HASHTABLE_SIZE;
+    res.BUFF_SIZE = BUFF_SIZE;
+    return res;
+}
+
+
+//-----------------------------------------------------------------------------
 // Main imploding function
 
 unsigned int PKEXPORT implode(

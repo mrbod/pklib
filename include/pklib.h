@@ -38,6 +38,47 @@
 #endif
 #endif
 
+enum CommonSizesEnum {
+    DIST_SIZES=0x40,
+    OUT_BUFF_SIZE=0x802
+};
+
+
+struct CommonSizeConstants{
+    size_t ownSize, DIST_SIZES, OUT_BUFF_SIZE;
+};
+
+struct ImplodeSizeConstants{
+    size_t ownSize;
+    struct CommonSizeConstants common;
+    size_t internalStructSize;
+    size_t OFFSS_SIZE2, LITERALS_COUNT, HASHTABLE_SIZE, BUFF_SIZE;
+};
+
+enum ImplodeSizesEnum {
+    OFFSS_SIZE2=0x204,
+    LITERALS_COUNT=0x306,
+    HASHTABLE_SIZE=0x900,
+    BUFF_SIZE=0x2204,
+};
+
+struct ExplodeSizeConstants{
+    size_t ownSize;
+    struct CommonSizeConstants common;
+    size_t internalStructSize;
+    size_t IN_BUFF_SIZE, CODES_SIZE, OFFSS_SIZE, OFFSS_SIZE1, CH_BITS_ASC_SIZE, LENS_SIZES;
+};
+
+enum ExplodeSizesEnum{
+    IN_BUFF_SIZE=0x800,
+    CODES_SIZE=0x100,
+    OFFSS_SIZE=0x100,
+    OFFSS_SIZE1=0x80,
+    CH_BITS_ASC_SIZE=0x100,
+    LENS_SIZES=0x10,
+};
+
+
 //-----------------------------------------------------------------------------
 // Internal structures
 
@@ -51,29 +92,26 @@ typedef struct
     unsigned int   dsize_mask;              // 0010: Bit mask for dictionary. 0x0F = 0x400, 0x1F = 0x800, 0x3F = 0x1000
     unsigned int   ctype;                   // 0014: Compression type (CMP_ASCII or CMP_BINARY)
     unsigned int   dsize_bytes;             // 0018: Dictionary size in bytes
-    unsigned char  dist_bits[0x40];         // 001C: Distance bits
-    unsigned char  dist_codes[0x40];        // 005C: Distance codes
-    unsigned char  nChBits[0x306];          // 009C: Table of literal bit lengths to be put to the output stream
-    unsigned short nChCodes[0x306];         // 03A2: Table of literal codes to be put to the output stream
+    unsigned char  dist_bits[DIST_SIZES];   // 001C: Distance bits
+    unsigned char  dist_codes[DIST_SIZES];  // 005C: Distance codes
+    unsigned char  nChBits[LITERALS_COUNT]; // 009C: Table of literal bit lengths to be put to the output stream
+    unsigned short nChCodes[LITERALS_COUNT];// 03A2: Table of literal codes to be put to the output stream
     unsigned short offs09AE;                // 09AE:
 
     void         * param;                   // 09B0: User parameter
     unsigned int (*read_buf)(char *buf, unsigned int *size, void *param);  // 9B4
     void         (*write_buf)(char *buf, unsigned int *size, void *param); // 9B8
 
-    unsigned short offs09BC[0x204];         // 09BC:
+    unsigned short offs09BC[OFFSS_SIZE2];   // 09BC:
     unsigned long  offs0DC4;                // 0DC4:
-    unsigned short phash_to_index[0x900];   // 0DC8: Array of indexes (one for each PAIR_HASH) to the "pair_hash_offsets" table
+    unsigned short phash_to_index[HASHTABLE_SIZE];  // 0DC8: Array of indexes (one for each PAIR_HASH) to the "pair_hash_offsets" table
     unsigned short phash_to_index_end;      // 1FC8: End marker for "phash_to_index" table
-    char           out_buff[0x802];         // 1FCA: Compressed data
-    unsigned char  work_buff[0x2204];       // 27CC: Work buffer
+    char           out_buff[OUT_BUFF_SIZE]; // 1FCA: Compressed data
+    unsigned char  work_buff[BUFF_SIZE];     // 27CC: Work buffer
                                             //  + DICT_OFFSET  => Dictionary
                                             //  + UNCMP_OFFSET => Uncompressed data
-    unsigned short phash_offs[0x2204];      // 49D0: Table of offsets for each PAIR_HASH
+    unsigned short phash_offs[BUFF_SIZE];    // 49D0: Table of offsets for each PAIR_HASH
 } TCmpStruct;
-
-#define CMP_BUFFER_SIZE  sizeof(TCmpStruct) // Size of compression structure.
-                                            // Defined as 36312 in pkware header file
 
 
 // Decompression structure
@@ -92,38 +130,42 @@ typedef struct
     unsigned int (*read_buf)(char *buf, unsigned int *size, void *param); // Pointer to function that reads data from the input stream
     void         (*write_buf)(char *buf, unsigned int *size, void *param);// Pointer to function that writes data to the output stream
 
-    unsigned char out_buff[0x2204];         // 0030: Output circle buffer.
+    unsigned char out_buff[OUT_BUFF_SIZE];   // 0030: Output circle buffer.
                                             //       0x0000 - 0x0FFF: Previous uncompressed data, kept for repetitions
                                             //       0x1000 - 0x1FFF: Currently decompressed data
                                             //       0x2000 - 0x2203: Reserve space for the longest possible repetition
-    unsigned char in_buff[0x800];           // 2234: Buffer for data to be decompressed
-    unsigned char DistPosCodes[0x100];      // 2A34: Table of distance position codes
-    unsigned char LengthCodes[0x100];       // 2B34: Table of length codes
-    unsigned char offs2C34[0x100];          // 2C34: Buffer for
-    unsigned char offs2D34[0x100];          // 2D34: Buffer for
-    unsigned char offs2E34[0x80];           // 2E34: Buffer for
-    unsigned char offs2EB4[0x100];          // 2EB4: Buffer for
-    unsigned char ChBitsAsc[0x100];         // 2FB4: Buffer for
-    unsigned char DistBits[0x40];           // 30B4: Numbers of bytes to skip copied block length
-    unsigned char LenBits[0x10];            // 30F4: Numbers of bits for skip copied block length
-    unsigned char ExLenBits[0x10];          // 3104: Number of valid bits for copied block
-    unsigned short LenBase[0x10];           // 3114: Buffer for
+    unsigned char in_buff[IN_BUFF_SIZE];    // 2234: Buffer for data to be decompressed
+    unsigned char DistPosCodes[CODES_SIZE]; // 2A34: Table of distance position codes
+    unsigned char LengthCodes[CODES_SIZE];  // 2B34: Table of length codes
+    unsigned char offs2C34[OFFSS_SIZE];     // 2C34: Buffer for
+    unsigned char offs2D34[OFFSS_SIZE];     // 2D34: Buffer for
+    unsigned char offs2E34[OFFSS_SIZE1];    // 2E34: Buffer for
+    unsigned char offs2EB4[OFFSS_SIZE];     // 2EB4: Buffer for
+    unsigned char ChBitsAsc[CH_BITS_ASC_SIZE]; // 2FB4: Buffer for
+    unsigned char DistBits[DIST_SIZES];      // 30B4: Numbers of bytes to skip copied block length
+    unsigned char LenBits[LENS_SIZES];       // 30F4: Numbers of bits for skip copied block length
+    unsigned char ExLenBits[LENS_SIZES];     // 3104: Number of valid bits for copied block
+    unsigned short LenBase[LENS_SIZES];      // 3114: Buffer for
 } TDcmpStruct;
 
-#define EXP_BUFFER_SIZE sizeof(TDcmpStruct) // Size of decompression structure
-                                            // Defined as 12596 in pkware headers
+enum {
+    CMP_BUFFER_SIZE = sizeof(TCmpStruct), // Size of compression structure.
+                                         // Defined as 36312 in pkware header file
+    EXP_BUFFER_SIZE=sizeof(TDcmpStruct), // Size of decompression structure
+                                         // Defined as 12596 in pkware headers
+};
 
 //-----------------------------------------------------------------------------
 // Tables (in PKWareLUTs.c)
 
-extern unsigned char DistBits[0x40];
-extern unsigned char DistCode[0x40];
-extern unsigned char ExLenBits[0x10];
-extern unsigned short LenBase[0x10];
-extern unsigned char LenBits[0x10];
-extern unsigned char LenCode[0x10];
-extern unsigned char ChBitsAsc[0x100];
-extern unsigned short ChCodeAsc[0x100];
+extern unsigned char DistBits[DIST_SIZES];
+extern unsigned char DistCode[DIST_SIZES];
+extern unsigned char ExLenBits[LENS_SIZES];
+extern unsigned short LenBase[LENS_SIZES];
+extern unsigned char LenBits[LENS_SIZES];
+extern unsigned char LenCode[LENS_SIZES];
+extern unsigned char ChBitsAsc[CH_BITS_ASC_SIZE];
+extern unsigned short ChCodeAsc[CH_BITS_ASC_SIZE];
 
 //-----------------------------------------------------------------------------
 // Public functions
@@ -131,6 +173,8 @@ extern unsigned short ChCodeAsc[0x100];
 #ifdef __cplusplus
    extern "C" {
 #endif
+
+struct ImplodeSizeConstants PKEXPORT getImplodeSizeConstants();
 
 unsigned int PKEXPORT implode(
    unsigned int (*read_buf)(char *buf, unsigned int *size, void *param),
@@ -140,6 +184,7 @@ unsigned int PKEXPORT implode(
    unsigned int *type,
    unsigned int *dsize);
 
+struct ExplodeSizeConstants PKEXPORT getExplodeSizeConstants();
 
 unsigned int PKEXPORT explode(
    unsigned int (*read_buf)(char *buf, unsigned  int *size, void *param),
