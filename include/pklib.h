@@ -114,7 +114,7 @@ typedef struct
                                             // Defined as 12596 in pkware headers
 
 //-----------------------------------------------------------------------------
-// Tables (in explode.c)
+// Tables (in PKWareLUTs.c)
 
 extern unsigned char DistBits[0x40];
 extern unsigned char DistCode[0x40];
