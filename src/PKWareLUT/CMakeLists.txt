@@ -1,6 +1,3 @@
-buildAndPackageLib("pkwareLUT"
-	COMPONENT "LUT"
-	DESCRIPTION "${PROJECT_DESCRIPTION}"
-	PUBLIC_INCLUDES ${Include_dir}
-)
-pass_through_cpack_vars()
+add_library(pkwareLUT STATIC PKWareLUTs.c)
+target_link_libraries(pkwareLUT
+    PRIVATE include)

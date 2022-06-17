@@ -1,11 +1,3 @@
-buildAndPackageLib("explode"
-	NON_RECURSIVE_GLOB
-	COMPONENT "decompressor"
-	DESCRIPTION "${PROJECT_DESCRIPTION}"
-	PUBLIC_INCLUDES ${Include_dir}
-	PRIVATE_LIBS "pkwareLUT"
-)
-if(WITH_TESTS)
-	add_subdirectory("test")
-endif()
-pass_through_cpack_vars()
+add_library(libexplode STATIC explode.c)
+target_link_libraries(libexplode
+    PRIVATE include)
